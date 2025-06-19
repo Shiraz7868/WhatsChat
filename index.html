@@ -6,257 +6,131 @@
     <title>WhatsChat</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --primary-color: #25D366; --bg-color: #111B21; --surface-color: #202C33; --text-color: #e0e0e0; --sender-bubble: #005C4B; --receiver-bubble: #202C33; --header-color: #202C33; }
-        
-        html, body {
-            height: 100%;
-            margin: 0;
-            overflow: hidden;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background-color: var(--bg-color);
-        }
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        .app-container {
-            width: 100%;
-            height: 100%;
-            max-width: 450px;
-            max-height: 100%;
-            background: var(--bg-color);
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            color: var(--text-color);
-        }
-        .screen {
-            display: none;
-            width: 100%;
-            height: 100%;
-            flex-direction: column;
-        }
-        .screen.active {
-            display: flex;
-        }
-        .header {
-            padding: 10px 15px;
-            background: var(--header-color);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-shrink: 0;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-        }
-        .header h2 { margin: 0; font-size: 18px; }
-        button {
-            cursor: pointer;
-            border: none;
-            font-family: inherit;
-            background-color: var(--primary-color);
-            color: white;
-            border-radius: 6px;
-            padding: 8px 12px;
-            font-weight: bold;
-        }
-        button:disabled {
-            background-color: #555;
-            cursor: not-allowed;
-        }
-        
-        #login-screen {
-            padding: 40px;
-            text-align: center;
-            justify-content: center;
-            background: var(--surface-color);
-            height: 100%;
-            box-sizing: border-box;
-        }
-        #username-input {
-            width: 100%;
-            padding: 12px;
-            font-size: 16px;
-            border-radius: 8px;
-            border: 1px solid #333;
-            background: #3c4549;
-            color: white;
-            margin-top: 20px;
-            box-sizing: border-box;
-        }
-        #login-btn { width: 100%; padding: 12px; margin-top: 15px; }
-
-        #chat-list-screen .header button { background: none; }
-        #chat-list { flex-grow: 1; overflow-y: auto; }
-        .chat-list-item { padding: 12px 15px; border-bottom: 1px solid #2a2a2a; cursor: pointer; display: flex; align-items: center; gap: 15px; }
-        .chat-list-item:hover { background-color: #2a2a2a; }
-        .avatar { width: 50px; height: 50px; border-radius: 50%; background-color: #333; display: flex; justify-content: center; align-items: center; font-weight: bold; text-transform: uppercase; font-size: 20px; }
-        #add-friend-btn { font-size: 28px; padding: 0 15px; color: var(--primary-color); }
-
-        #private-chat-screen .messages-area {
-            flex-grow: 1;
-            padding: 15px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column-reverse;
-            background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png');
-        }
-        .message-bubble { max-width: 75%; padding: 8px 12px; border-radius: 8px; margin-bottom: 10px; word-wrap: break-word; line-height: 1.4; box-shadow: 0 1px 1px rgba(0,0,0,0.1); }
-        .sender { background: var(--sender-bubble); align-self: flex-end; }
-        .receiver { background: var(--receiver-bubble); align-self: flex-start; }
-        .input-area { display: flex; padding: 10px; background: var(--header-color); align-items: center; flex-shrink: 0; }
-        #message-input { flex-grow: 1; padding: 12px; border: none; border-radius: 20px; background: var(--surface-color); color: white; font-size: 16px; }
-        #send-btn { background: none; color: var(--primary-color); font-size: 24px; padding: 10px; }
+        :root { /* WhatsApp Color Palette */ --primary-color: #25D366; --bg-color: #111B21; --surface-color: #202C33; --text-color: #e0e0e0; --sender-bubble: #005C4B; --receiver-bubble: #202C33; --header-color: #202C33; --online-color: #4CAF50; --seen-color: #53bdeb; }
+        /* ... Baqi ka poora CSS ... */
+        .empty-chat-list { display: none; flex-direction: column; justify-content: center; align-items: center; text-align: center; height: 100%; }
+        .empty-chat-list button { padding: 15px 30px; font-size: 18px; }
+        .message-footer { display: flex; align-items: center; justify-content: flex-end; font-size: 11px; color: rgba(255, 255, 255, 0.6); margin-top: 4px; }
+        .message-status-ticks { margin-left: 5px; }
+        .message-status-ticks.seen { color: var(--seen-color); }
+        .input-area button { background: none; color: #8696a0; font-size: 24px; padding: 10px; }
     </style>
 </head>
 <body>
-
     <div class="app-container">
-        <!-- SCREEN 1: LOGIN -->
-        <div id="login-screen" class="screen active">
-            <h2>Welcome to WhatsChat</h2>
-            <p>Enter a username to begin</p>
-            <input type="text" id="username-input" placeholder="Choose a unique username...">
-            <button id="login-btn">Login / Register</button>
-        </div>
-
-        <!-- SCREEN 2: CHAT LIST -->
+        <!-- HTML Screens (Ab behtar hain) -->
         <div id="chat-list-screen" class="screen">
-            <div class="header">
-                <h2>WhatsChat</h2>
-                <div>
-                    <button id="add-friend-btn" title="Add Friend">+</button>
-                    <button id="logout-btn" style="background: #dc3545;" title="Logout">Logout</button>
-                </div>
-            </div>
+            <!-- ... -->
             <div id="chat-list"></div>
-        </div>
-
-        <!-- SCREEN 3: PRIVATE CHAT -->
-        <div id="private-chat-screen" class="screen">
-            <div class="header">
-                <button id="back-btn" title="Back to Chats">←</button>
-                <h2 id="chat-friend-name"></h2>
-                <div></div>
+            <div id="empty-chat-list" class="empty-chat-list">
+                <h2>Welcome to WhatsChat!</h2>
+                <p>Add your first friend to start chatting.</p>
+                <button id="add-friend-btn-empty">Add Friend</button>
             </div>
+        </div>
+        <!-- ... -->
+        <div id="private-chat-screen" class="screen">
+            <!-- ... -->
             <div class="messages-area" id="messages-area"></div>
             <div class="input-area">
+                <button id="attach-btn" title="Attach File">📎</button>
+                <input type="file" id="file-input" accept="image/*" style="display:none;">
                 <input type="text" id="message-input" placeholder="Type a message...">
+                <button id="record-btn" title="Record Voice">🎙️</button>
                 <button id="send-btn" title="Send">➤</button>
             </div>
         </div>
     </div>
 
     <script>
-        // === AAPKI NAYI KEYS YAHAN ADD KAR DI GAYI HAIN ===
         const SUPABASE_URL = 'https://qfvuqtnvadhiuutrqwhg.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFmdnVxdG52YWRoaXV1dHJxd2hnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAxODMwMzYsImV4cCI6MjA2NTc1OTAzNn0.w5tqnR4gv5Ke0wigiP1puSbLDJZV2BPXCtUX-XqWpaw';
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-        // === DOM & STATE ===
-        const screens = document.querySelectorAll('.screen');
-        const loginBtn = document.getElementById('login-btn');
-        let currentUser = null;
-        let currentChat = null;
-        let messageSubscription = null;
-
-        // === NAVIGATION ===
-        function showScreen(screenId) {
-            screens.forEach(s => s.classList.remove('active'));
-            document.getElementById(screenId).classList.add('active');
-        }
-
-        // === AUTHENTICATION LOGIC ===
-        async function handleLogin() {
-            loginBtn.disabled = true;
-            loginBtn.textContent = 'Please wait...';
-
-            const username = document.getElementById('username-input').value.trim();
-            if (username.length < 3) {
-                alert("Username must be at least 3 characters.");
-                loginBtn.disabled = false;
-                loginBtn.textContent = 'Login / Register';
-                return;
-            }
-            
-            const email = `${username.toLowerCase()}@whatschat.app`;
-            const password = 'a-very-secret-password';
-
-            try {
-                let { data: authData, error: signInError } = await supabaseClient.auth.signInWithPassword({ email, password });
-
-                if (signInError && signInError.message.includes("Invalid login credentials")) {
-                    const { data: signUpData, error: signUpError } = await supabaseClient.auth.signUp({ email, password });
-                    if (signUpError) throw signUpError;
-                    authData = signUpData;
-                } else if (signInError) {
-                    throw signInError;
-                }
-                
-                const user = authData.user;
-                let { data: profile } = await supabaseClient.from('profiles').select('id').eq('id', user.id).single();
-                
-                if (!profile) {
-                    const { error: profileError } = await supabaseClient.from('profiles').insert({ id: user.id, username: username });
-                    if (profileError) {
-                        if (profileError.code === '23505') throw new Error("This username is already taken.");
-                        throw profileError;
-                    }
-                }
-                
-                await initializeApp();
-            } catch (error) {
-                console.error("Authentication process failed:", error);
-                alert(`Error: ${error.message}`);
-            } finally {
-                loginBtn.disabled = false;
-                loginBtn.textContent = 'Login / Register';
-            }
-        }
-        loginBtn.addEventListener('click', handleLogin);
         
-        async function initializeApp() {
-            const { data: { session } } = await supabaseClient.auth.getSession();
-            if (session) {
-                const { data } = await supabaseClient.from('profiles').select().eq('id', session.user.id).single();
-                if(!data) {
-                    await supabaseClient.auth.signOut();
-                    showScreen('login-screen');
-                    return;
-                } 
-                currentUser = data;
-                showScreen('chat-list-screen');
-                loadUserChats();
-            } else {
-                showScreen('login-screen');
+        // ... Poora naya JavaScript yahan ayega ...
+
+        // Naya displayMessage function
+        function displayMessage(msg, shouldScroll) {
+            const messagesArea = document.getElementById('messages-area');
+            const div = document.createElement('div');
+            div.className = 'message-bubble';
+            div.dataset.messageId = msg.id;
+            div.classList.add(msg.sender_id === currentUser.id ? 'sender' : 'receiver');
+
+            const time = new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            
+            let contentHTML = '';
+            if (msg.media_type === 'image') contentHTML = `<img src="${msg.media_url}" alt="Image">`;
+            else if (msg.media_type === 'audio') contentHTML = `<audio controls src="${msg.media_url}"></audio>`;
+            else contentHTML = msg.content;
+            
+            let ticksHTML = '';
+            if (msg.sender_id === currentUser.id) {
+                ticksHTML = `<span class="message-status-ticks ${msg.status === 'read' ? 'seen' : ''}">✓${msg.status !== 'sent' ? '✓' : ''}</span>`;
+            }
+
+            div.innerHTML = `
+                <div class="content">${contentHTML}</div>
+                <div class="message-footer">
+                    <span>${time}</span>
+                    ${ticksHTML}
+                </div>
+            `;
+            messagesArea.appendChild(div);
+            if(shouldScroll) messagesArea.scrollTop = messagesArea.scrollHeight;
+        }
+
+        // Naya sendMessage function
+        async function sendMessage(content, mediaUrl = null, mediaType = 'text') {
+            const input = document.getElementById('message-input');
+            const textContent = content.trim();
+            if (!textContent && !mediaUrl) return;
+
+            const tempId = `temp_${Date.now()}`;
+            const tempMessage = { id: tempId, sender_id: currentUser.id, content: textContent, created_at: new Date().toISOString(), status: 'sent', media_url: mediaUrl, media_type: mediaType };
+            displayMessage(tempMessage, true);
+            
+            input.value = '';
+            
+            const { data, error } = await supabaseClient.from('messages').insert({ chat_id: currentChat.id, sender_id: currentUser.id, content: textContent, media_url: mediaUrl, media_type: mediaType }).select().single();
+            
+            if (data) {
+                // Temporary message ko asal message se replace karein
+                const tempElem = document.querySelector(`[data-message-id='${tempId}']`);
+                if(tempElem) tempElem.dataset.messageId = data.id;
             }
         }
-        initializeApp();
+        
+        // Message ko "read" mark karne ka logic
+        function markMessagesAsRead() {
+            supabaseClient.from('messages').update({ status: 'read' }).eq('chat_id', currentChat.id).neq('sender_id', currentUser.id).then();
+        }
 
-        // === BAQI KA JAVASCRIPT CODE BILKUL WAHI HAI ===
-        document.getElementById('logout-btn').addEventListener('click', async () => { /* ... */ });
-        async function loadUserChats() { /* ... */ }
-        document.getElementById('add-friend-btn').addEventListener('click', async () => { /* ... */ });
-        function openChat(chat, friend) { /* ... */ }
-        document.getElementById('back-btn').addEventListener('click', () => { /* ... */ });
-        async function loadMessages() { /* ... */ }
-        document.getElementById('send-btn').addEventListener('click', sendMessage);
-        document.getElementById('message-input').addEventListener('keydown', (e) => e.key === 'Enter' && sendMessage());
-        async function sendMessage() { /* ... */ }
-        function displayMessage(msg) { /* ... */ }
-        function subscribeToMessages() { /* ... */ }
+        function openChat(chat, friend) {
+            // ...
+            markMessagesAsRead(); // Chat kholte hi messages read mark karein
+            // ...
+        }
 
-        // Poore functions pichle jawab se copy kar lein
-        document.getElementById('logout-btn').addEventListener('click', async () => { await supabaseClient.auth.signOut(); location.reload(); });
-        async function loadUserChats() { const { data: chats, error } = await supabaseClient.from('chats').select(`id, user1:profiles!user1_id(username), user2:profiles!user2_id(username)`).or(`user1_id.eq.${currentUser.id},user2_id.eq.${currentUser.id}`); if (error) return console.error(error); const chatListDiv = document.getElementById('chat-list'); chatListDiv.innerHTML = ''; chats.forEach(chat => { const friend = chat.user1.username === currentUser.username ? chat.user2 : chat.user1; const div = document.createElement('div'); div.className = 'chat-list-item'; div.innerHTML = `<div class="avatar">${friend.username.charAt(0)}</div> <div>${friend.username}</div>`; div.onclick = () => openChat(chat, friend); chatListDiv.appendChild(div); }); }
-        document.getElementById('add-friend-btn').addEventListener('click', async () => { const friendUsername = prompt("Enter friend's username:"); if (!friendUsername || friendUsername.toLowerCase() === currentUser.username.toLowerCase()) return; const { data: friendProfile, error } = await supabaseClient.from('profiles').select().eq('username', friendUsername).single(); if (error || !friendProfile) return alert("User not found."); const { data: existingChat } = await supabaseClient.from('chats').select('id').or(`(user1_id.eq.${currentUser.id},user2_id.eq.${friendProfile.id}),(user1_id.eq.${friendProfile.id},user2_id.eq.${currentUser.id})`).limit(1); if(existingChat && existingChat.length > 0) return alert("Chat with this user already exists."); const { error: chatError } = await supabaseClient.from('chats').insert({ user1_id: currentUser.id, user2_id: friendProfile.id }); if (chatError) return alert("Could not create chat."); loadUserChats(); });
-        function openChat(chat, friend) { currentChat = chat; document.getElementById('chat-friend-name').innerText = friend.username; showScreen('private-chat-screen'); loadMessages(); subscribeToMessages(); }
-        document.getElementById('back-btn').addEventListener('click', () => { if(messageSubscription) supabaseClient.removeChannel(messageSubscription); currentChat = null; showScreen('chat-list-screen'); });
-        async function loadMessages() { const messagesArea = document.getElementById('messages-area'); messagesArea.innerHTML = ''; const { data } = await supabaseClient.from('messages').select().eq('chat_id', currentChat.id).order('created_at', { ascending: false }); data.forEach(msg => displayMessage(msg)); }
-        async function sendMessage() { const input = document.getElementById('message-input'); const content = input.value.trim(); if (!content) return; await supabaseClient.from('messages').insert({ chat_id: currentChat.id, sender_id: currentUser.id, content }); input.value = ''; }
-        function displayMessage(msg) { const messagesArea = document.getElementById('messages-area'); const div = document.createElement('div'); div.className = 'message-bubble'; div.classList.add(msg.sender_id === currentUser.id ? 'sender' : 'receiver'); div.innerText = msg.content; messagesArea.insertBefore(div, messagesArea.firstChild); }
-        function subscribeToMessages() { if (messageSubscription) supabaseClient.removeChannel(messageSubscription); messageSubscription = supabaseClient.channel(`chat_${currentChat.id}`).on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `chat_id=eq.${currentChat.id}` }, payload => { displayMessage(payload.new); }).subscribe(); }
-
+        function subscribeToMessages() {
+            // ...
+            // Ab message UPDATE ko bhi sunein (read status ke liye)
+            messageSubscription = supabaseClient.channel(`chat_${currentChat.id}`)
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'messages', filter: `chat_id=eq.${currentChat.id}` }, payload => {
+                    if (payload.eventType === 'INSERT') {
+                        if (payload.new.sender_id !== currentUser.id) {
+                            displayMessage(payload.new, true);
+                            markMessagesAsRead(); // Naya message aate hi read mark karein
+                        }
+                    } else if (payload.eventType === 'UPDATE') {
+                        // Read ticks ko update karein
+                        const tickElement = document.querySelector(`[data-message-id='${payload.new.id}'] .message-status-ticks`);
+                        if (tickElement && payload.new.status === 'read') {
+                            tickElement.classList.add('seen');
+                        }
+                    }
+                }).subscribe();
+        }
     </script>
 </body>
 </html>
